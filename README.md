@@ -11,7 +11,7 @@ python species.py
   <img width="500" src="images/tree.png">
 </p>
 
-To use the larger database 4.5 million species (takes 5 seconds to load in memory) use as follows
+To use the larger database 4.5 million species (takes 5 seconds to load in memory) first create a directory called `ott` then download the `taxonomy.tsv` from the database and put it inside the folder. Then it can be used as follows
 
 ```
 python species.py --database ott
