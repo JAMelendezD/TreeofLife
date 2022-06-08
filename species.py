@@ -10,9 +10,6 @@ node_names = pd.read_csv('./archive/treeoflife_nodes.csv',
 nodes = pd.read_csv('./archive/treeoflife_nodes.csv', 
        usecols = [0, 2, 3, 4, 5, 6, 7]).to_numpy()
 
-num_name = dict(zip(nodes[:,0], node_names[:,0]))
-name_num = dict(zip(node_names[:,0], nodes[:,0]))
-
 extinct = np.where(nodes[:,4] == 1)
 
 for i in extinct:
@@ -77,58 +74,74 @@ def get_possible(nodes):
         opt[i+1] = node
     return opt
 
-commands = ['help', 'tree', 'info']
+def main():
+    commands = ['help', 'tree', 'info']
 
-print("\x1b[38;2;120;255;105;208m" + ''' 
+    print("\x1b[38;2;120;255;105;208m" + 
+'''
 ######## Tree of Life ########\n
-              * *    
-           *    *  *
-      *  *    *     *  *
-     *     *    *  *    *
- * *   *    *    *    *   *
- *     *  *    * * .#  *   *
- *   *     * #.  .# *   *
-  *     "#.  #: #" * *    *
- *   * * "#. ##"       *
-   *       "###
-             "##
-              ##.
-              .##:
-              :###
-              ;###
+            * *    
+        *    *  *
+    *  *    *     *  *
+    *     *    *  *    *
+* *   *    *    *    *   *
+*     *  *    * * .#  *   *
+*   *     * #.  .# *   *
+*     "#.  #: #" * *    *
+*   * * "#. ##"       *
+*       "###
+            "##
+            ##.
+            .##:
+            :###
+            ;###
             ,####.
 /\/\/\/\/\/.######.\/\/\/\/\
 \n\n#############################
 ''' + "\x1b[0m")
 
-print("Hello type a \"command: value\" or help for more information")
-options = {}
-while True:
-    inp = input("").split(":")
-    if len(inp) == 1:
-        if inp[0].isdigit() and options:
-            target = options[int(inp[0])]     
-            output = forward(target, [])
-            options = get_possible(output)
-        else:
-            if inp[0] == "help":
-                print("Possible commands: tree, info")
-                print("Example: info: Life on Earth\n")
-            else:
-                print(f"{inp[0]} requires other keyword")
-                print("Example: info: Life on Earth\n")
-
-    elif len(inp) == 2:
-        command = inp[0]
-        if command in commands:
-            target = inp[1].strip()
-            if command == 'info':
-                output = forward(name_num[target], [])
+    print("Hello type a \"command: value\" or help for more information")
+    options = {}
+    while True:
+        inp = input("").split(":")
+        if len(inp) == 1:
+            if inp[0].isdigit() and options:
+                target = options[int(inp[0])]     
+                output = forward(target, [])
                 options = get_possible(output)
-            elif command == 'tree': 
-                output = back_track(name_num[target], [])
-                get_info(name_num[target], output)
-    else:
-        print("Command or input not found try again\n")
-        print("Possible commands: tree, info")
-        print("Example: info: Life on Earth\n")
+            else:
+                if inp[0] == "help":
+                    print("Possible commands: tree, info")
+                    print("Example: info: Life on Earth\n")
+                else:
+                    if inp[0] in commands:
+                        print(f"{inp[0]} requires other keyword")
+                        print("Example: info: Life on Earth\n")
+                    else:
+                        print("Command not implemented try", commands)
+
+        elif len(inp) == 2:
+            command = inp[0]
+            if command in commands:
+                target = inp[1].strip()
+                if command == 'info':
+                    if target in name_num.keys():
+                        output = forward(name_num[target], [])
+                        options = get_possible(output)
+                    else:
+                        print("Target not found in database check your spelling")
+                elif command == 'tree':
+                    if target in name_num.keys(): 
+                        output = back_track(name_num[target], [])
+                        get_info(name_num[target], output)
+                    else:
+                        print("Target not found in database check your spelling")
+            else:
+                print("Command not implemented try", commands)
+        else:
+            print("Command or input not found try again\n")
+            print("Possible commands: tree, info")
+            print("Example: info: Life on Earth\n")
+
+if __name__ == '__main__':
+    main()
