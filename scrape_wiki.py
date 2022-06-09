@@ -63,25 +63,5 @@ def scrape(start, stop):
                 line = f"{name_num[node_names[i][0]]}," + "\"No information found"
                 #f.write(line + "\"\n")
 
-def main():
-    '''
-    cores = mp.cpu_count()
-    pool = Pool(cores)
-    divide_conquer = int(np.ceil((len(node_names)+1)/cores))
-
-    start = []
-    stop = []
-
-    for i in range(cores):
-        start.append(i*divide_conquer)
-        if i == cores-1:
-            stop.append(len(node_names)+1)
-        else:
-            stop.append((i+1)*divide_conquer)
-
-    pool.starmap(scrape,zip(start,stop))
-    '''
-    scrape(0, len(node_names)+1)
-
 if __name__ == "__main__":
-    main()
+    scrape(0, len(node_names)+1)
