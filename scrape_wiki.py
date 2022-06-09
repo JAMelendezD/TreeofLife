@@ -55,8 +55,8 @@ def scrape(start, stop):
                     text = str(paragraph.get_text())
                     if len(text) >= 100:
                         print(Y, name_num[node_names[i][0]], node_names[i][0], G, text[0:200].replace('\n', ' '), "...", r)
-                        line = f"{name_num[node_names[i][0]]}," + "\"" + text[0:200] + "...".replace('\n', '')
-                        f.write(line + "\"\n")
+                        line = f"{name_num[node_names[i][0]]}," + "\"" + text[0:200] + "..."
+                        f.write(line.replace('\n', '') + "\"\n")
                         break
             else:
                 print(Y, name_num[node_names[i][0]], node_names[i][0], R, "No information found", r)
