@@ -6,6 +6,8 @@ import multiprocessing as mp
 from multiprocessing.pool import Pool
 from tqdm import tqdm
 
+
+'''
 node_names = pd.read_table('./ott/taxonomy.tsv', 
         usecols = [4]).to_numpy()
 
@@ -13,6 +15,18 @@ links = np.flip(pd.read_table('./ott/taxonomy.tsv',
         usecols = [0, 2]).to_numpy(dtype=int), axis=1)
 
 name_num = dict(zip(node_names[:,0], links[:,1]))
+'''
+
+links = pd.read_csv('./tol/treeoflife_links.csv', 
+    usecols = [0, 1]).to_numpy(dtype = int)
+
+node_names = pd.read_csv('./tol/treeoflife_nodes.csv', 
+    usecols = [1]).to_numpy()
+
+nodes = pd.read_csv('./tol/treeoflife_nodes.csv', 
+    usecols = [0, 2, 3, 4, 5, 6, 7]).to_numpy()
+
+name_num = dict(zip(node_names[:,0], nodes[:,0]))
 
 G = "\x1b[38;2;120;255;105;208m"
 Y = "\x1b[38;2;255;200;105;208m"
@@ -40,8 +54,8 @@ def scrape(start, stop):
                 for paragraph in soup.find_all('p'):
                     text = str(paragraph.get_text())
                     if len(text) >= 100:
-                        print(Y, name_num[node_names[i][0]], node_names[i][0], G, text[0:200].replace('\n', ' '), r)
-                        line = f"{name_num[node_names[i][0]]}," + "\"" + text[0:200].replace('\n', ' ')
+                        print(Y, name_num[node_names[i][0]], node_names[i][0], G, text[0:200].replace('\n', ' '), "...", r)
+                        line = f"{name_num[node_names[i][0]]}," + "\"" + text[0:200] + "...".replace('\n', '')
                         f.write(line + "\"\n")
                         break
             else:
