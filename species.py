@@ -24,6 +24,9 @@ if args.database == 'tol':
 
     nodes = pd.read_csv('./tol/treeoflife_nodes.csv', 
         usecols = [0, 2, 3, 4, 5, 6, 7]).to_numpy()
+    
+    info = pd.read_csv('./tol/info.csv', 
+        usecols = [0, 1], delimiter =',').to_numpy()
 
     extinct = np.where(nodes[:,4] == 1)
 
@@ -32,6 +35,7 @@ if args.database == 'tol':
 
     num_name = dict(zip(nodes[:,0], node_names[:,0]))
     name_num = dict(zip(node_names[:,0], nodes[:,0]))
+    num_info = dict(zip(info[:,0], info[:,1]))
 
     def back_track(num, connections):
         '''
@@ -48,7 +52,7 @@ if args.database == 'tol':
             back_track(new_num, connections)
         return connections
 
-    def get_info(target, nodes):
+    def get_tree(target, nodes):
 
         reset  = "\x1b[0m"
         
@@ -90,7 +94,7 @@ elif args.database == 'ott':
             back_track(new_num, connections)
         return connections
 
-    def get_info(target, nodes):
+    def get_tree(target, nodes):
         
         reset  = "\x1b[0m"
         
@@ -134,8 +138,12 @@ def get_possible(nodes):
         opt[i+1] = node
     return opt
 
+def get_info(target):
+    if target in name_num.keys(): 
+        return "\x1b[38;2;255;200;105;208m"+num_info[name_num[target]]+"\x1b[0m"
+
 def main():
-    commands = ['help', 'tree', 'info']
+    commands = ['help', 't', 'i', 'n']
 
     print("\x1b[38;2;120;255;105;208m" + 
 '''
@@ -184,18 +192,20 @@ def main():
             command = inp[0]
             if command in commands:
                 target = inp[1].strip()
-                if command == 'info':
+                if command == 'n':
                     if target in name_num.keys():
                         output = forward(name_num[target], [])
                         options = get_possible(output)
                     else:
                         print("Target not found in database check your spelling")
-                elif command == 'tree':
+                elif command == 't':
                     if target in name_num.keys(): 
                         output = back_track(name_num[target], [])
-                        get_info(name_num[target], output)
+                        get_tree(name_num[target], output)
                     else:
                         print("Target not found in database check your spelling")
+                elif command == 'i':
+                    print(get_info(target))
             else:
                 print("Command not implemented try", commands)
         else:
