@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 from argparse import ArgumentParser
 import readline
+from Levenshtein import distance as lev
+#from fastDamerauLevenshtein import damerauLevenshtein as lev
+from heapq import nsmallest
 
 parser = ArgumentParser(description="Python Game of Life")
     
@@ -13,6 +16,13 @@ parser.add_argument('--database',
                     help='list of databases, (default: %(default)s)')
 
 args = parser.parse_args()
+
+YELLOW = "\x1b[38;2;255;200;105;208m"
+GREEN = "\x1b[38;2;120;255;105;208m"
+BLUE = "\x1b[38;2;120;105;235;208m"
+RED = "\x1b[38;2;255;55;50;208m"
+R = "\x1b[0m"
+GRAD = "\x1b[38;2;{};250;120;208m"
 
 if args.database == 'tol':
 
@@ -54,18 +64,14 @@ if args.database == 'tol':
 
     def get_tree(target, nodes):
 
-        reset  = "\x1b[0m"
-        
-        color = "\x1b[38;2;255;200;105;208m"
-        print(color + "----------------------------------------")
+        print(YELLOW + 40*"-")
         print("Target: ", num_name[target])
-        print("----------------------------------------" + reset)
+        print(40*"-" + R)
 
-        color = "\x1b[38;2;{};250;120;208m"
         for i, item in enumerate(nodes[::-1]):
             space = i*" "
             fmt = 255//len(nodes)*i
-            print(f"{space}-{color.format(255-fmt)}{item:20s}{reset}")
+            print(f"{space}-{GRAD.format(255-fmt)}{item:20s}{R}")
 
 elif args.database == 'ott':
 
@@ -96,21 +102,17 @@ elif args.database == 'ott':
 
     def get_tree(target, nodes):
         
-        reset  = "\x1b[0m"
-        
-        color = "\x1b[38;2;255;200;105;208m"
-        print(color + "----------------------------------------")
+        print(YELLOW + 40*"-")
         print("Target: ", num_name[target])
-        print("----------------------------------------" + reset)
+        print(40*"-" + R)
 
-        color = "\x1b[38;2;{};250;120;208m"
         for i, item in enumerate(nodes[::-1]):
             space = i*" "
             fmt = 255//len(nodes)*i
             if item[1] == 'no rank':
-                print(f"{space}-{color.format(255-fmt)}{item[0]:20s}{reset}")
+                print(f"{space}-{GRAD.format(255-fmt)}{item[0]:20s}{R}")
             else:
-                print(f"{space}-{color.format(255-fmt)}{item[0]:20s}{item[1]:20s}{reset}")
+                print(f"{space}-{GRAD.format(255-fmt)}{item[0]:20s}{item[1]:20s}{R}")
 
 def forward(father_node, result):
     '''
@@ -129,21 +131,72 @@ def forward(father_node, result):
     return result
 
 def get_possible(nodes):
-    
+
     opt = {}
-    reset  = "\x1b[0m"
-    color = "\x1b[38;2;255;200;105;208m"
-    for i, node in enumerate(nodes):
-        print(f"{color} {i+1}) {num_name[node]}{reset}")
-        opt[i+1] = node
+    size  = len(nodes)
+    for i, node in enumerate(nodes[::-1]):
+        print(f"{YELLOW} {size-i}) {num_name[node]}{R}")
+        opt[size-i] = node
     return opt
 
-def get_info(target):
-    if target in name_num.keys(): 
-        return "\x1b[38;2;255;200;105;208m"+num_info[name_num[target]]+"\x1b[0m"
+def get_info(target): 
+    return YELLOW+num_info[name_num[target]]+R
+
+def suggestions(target):
+
+    max_suggestions = 20
+
+    scores = {}
+    for name in name_num.keys():
+        scores[lev(target, name[:30])] = name
+    best_twenty = nsmallest(max_suggestions, scores, key=scores.get)
+
+    opt = {}
+    for i, score in enumerate(best_twenty[::-1]):
+        name = scores[score]
+        print(f"{BLUE} {max_suggestions-i}) {name}{R}")
+        opt[max_suggestions-i] = name_num[name]
+    return opt
 
 def main():
     commands = ['help', 't', 'i', 'n']
+    
+    if args.database == 'tol':
+        EXAMPLE = "Example: n: Life on Earth"
+    elif args.database == 'ott':
+        EXAMPLE = "Example: n: life"
+
+    NOT_FOUND = "Target not found in database maybe you meant:"
+
+    def execute(target, command):
+
+        options = None
+
+        if command == 'n':
+            if target in name_num.keys():
+                output = forward(name_num[target], [])
+                options = get_possible(output)
+            else:
+                print(RED + NOT_FOUND)
+                options = suggestions(target)
+        elif command == 't':
+            if target in name_num.keys(): 
+                output = back_track(name_num[target], [])
+                get_tree(name_num[target], output)
+            else:
+                print(RED + NOT_FOUND)
+                options = suggestions(target)
+        elif command == 'i':
+            if target in name_num.keys():
+                if name_num[target] in num_info.keys(): 
+                    print(get_info(target))
+                else:
+                    print(RED + "No information found" + R)
+            else:
+                print(RED + NOT_FOUND)
+                options = suggestions(target)
+        
+        return options, command
 
     print("\x1b[38;2;120;255;105;208m" + 
 '''
@@ -174,17 +227,19 @@ def main():
         inp = input("").split(":")
         if len(inp) == 1:
             if inp[0].isdigit() and options:
-                target = options[int(inp[0])]     
-                output = forward(target, [])
-                options = get_possible(output)
+                target = options[int(inp[0])]
+                if args.database == 'tol':
+                    options, command = execute(num_name[target], command)
+                elif args.database == 'ott':
+                    options, command = execute(num_name[target][0], command)
             else:
                 if inp[0] == "help":
-                    print("Possible commands: tree, info")
-                    print("Example: info: Life on Earth\n")
+                    print("Possible commands: t (tree), i (info), n (nodes)")
+                    print(EXAMPLE)
                 else:
                     if inp[0] in commands:
                         print(f"{inp[0]} requires other keyword")
-                        print("Example: info: Life on Earth\n")
+                        print(EXAMPLE)
                     else:
                         print("Command not implemented try", commands)
 
@@ -192,26 +247,12 @@ def main():
             command = inp[0]
             if command in commands:
                 target = inp[1].strip()
-                if command == 'n':
-                    if target in name_num.keys():
-                        output = forward(name_num[target], [])
-                        options = get_possible(output)
-                    else:
-                        print("Target not found in database check your spelling")
-                elif command == 't':
-                    if target in name_num.keys(): 
-                        output = back_track(name_num[target], [])
-                        get_tree(name_num[target], output)
-                    else:
-                        print("Target not found in database check your spelling")
-                elif command == 'i':
-                    print(get_info(target))
+                options, command = execute(target, command)
             else:
-                print("Command not implemented try", commands)
+                print(RED + "Command not implemented try" + R, commands)
         else:
-            print("Command or input not found try again\n")
-            print("Possible commands: tree, info")
-            print("Example: info: Life on Earth\n")
+            print(RED + "Command or input not found try:" + R, commands)
+            print(EXAMPLE)
 
 if __name__ == '__main__':
     main()
