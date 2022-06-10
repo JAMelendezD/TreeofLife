@@ -52,10 +52,10 @@ def scrape(start, stop):
 
             try:
                 page = requests.get(webpage)
-            except ConnectionResetError:
+            except:
                 print(30*"#"+"\n"+f"Failed at index: {i}")
                 break
-
+            
             if page.status_code != 404:
                 soup = BeautifulSoup(page.content, 'html.parser')
                 for paragraph in soup.find_all('p'):
