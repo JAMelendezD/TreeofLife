@@ -49,7 +49,12 @@ def scrape(start, stop):
             else:
                 webpage = f"https://en.wikipedia.org/wiki/{data[0].capitalize()}_{data[1]}"
 
-            page = requests.get(webpage)
+
+            try:
+                page = requests.get(webpage)
+            except ConnectionResetError:
+                print(30*"#"+"\n"+f"Failed at index: {i}")
+                break
 
             if page.status_code != 404:
                 soup = BeautifulSoup(page.content, 'html.parser')
