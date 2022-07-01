@@ -246,7 +246,7 @@ def main():
         elif len(inp) == 2:
             command = inp[0]
             if command in commands:
-                target = inp[1].strip()
+                target = inp[1].strip().capitalize()
                 options, command = execute(target, command)
             else:
                 print(RED + "Command not implemented try" + R, commands)
